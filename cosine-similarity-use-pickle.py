@@ -56,11 +56,18 @@ def generate_top_ten(keywords = 'fantasy novel short'):
     # Sort DataFrame by similarity score in descending order and show top 10 rows
     top_10 = big_df.sort_values(by='similarity_score', ascending=False).head(10)
     print(top_10)
-    return(top_10)
+    return(top_10[['product_title','clean_text']])
 
 def gradio_gui():
-    outputs = [gr.Dataframe(row_count = (11, "dynamic"), col_count=(5, "dynamic"), label="Generated List")]
-    gr.Interface(fn = generate_top_ten, inputs = "textbox", outputs = outputs).launch()
+    
+    with gr.Blocks() as demo:
+        keywords = gr.Textbox(label="Keywords")
+        greet_btn = gr.Button("generate")
+        outputs = gr.Dataframe(row_count = (10, "dynamic"), col_count=(2, "dynamic"), label="Generated List")
+        
+        greet_btn.click(fn = generate_top_ten, inputs = keywords, outputs = outputs)
+    demo.launch(share=True)
+
 
 if __name__ == "__main__":
-    generate_top_ten()
+    gradio_gui()
