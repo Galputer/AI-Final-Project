@@ -30,7 +30,7 @@ batch_size = 64
 total_batches = (len(df) + batch_size - 1) // batch_size
 
 df['similarity_score'] = ''
-
+df['encoded_text'] = ''
 # Generate BERT embeddings for keyword and text tokens batch-wise and compute cosine similarity
 with torch.no_grad():
     keyword_embeddings = model(encoded_keywords.to(device))[0][:, 0, :].cpu().numpy()
@@ -42,7 +42,7 @@ with torch.no_grad():
         # Encode texts in the batch
         batch_text_tokens = df.iloc[start_idx:end_idx]['clean_text']
         encoded_texts = tokenizer(batch_text_tokens.tolist(), padding=True, truncation=True, return_tensors='pt').to(device)
-        
+        df.iloc[start_idx:end_idx, df.columns.get_loc('encoded_text')] = encoded_texts
         # Generate BERT embeddings for the batch
         input_ids = encoded_texts['input_ids']
         attention_mask = encoded_texts['attention_mask']
@@ -59,3 +59,4 @@ with torch.no_grad():
 top_10 = df.sort_values(by='similarity_score', ascending=False).head(10)
 print(top_10)
 top_10.to_csv("example.csv",index=False)
+df.to_pickle("book-pickle/2005.csv",index=False)
