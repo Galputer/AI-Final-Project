@@ -4,54 +4,63 @@ from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
-# Concatenated keywords
-keywords = 'apple iphone technology'
+import gradio as gr
 
-# Load pre-trained BERT model and tokenizer
-MODEL = 'bert-base-uncased'
+def generate_top_ten(keywords = 'fantasy novel short'):
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-tokenizer = AutoTokenizer.from_pretrained(MODEL)
-model = AutoModel.from_pretrained(MODEL).to(device)
-model.save_pretrained(MODEL)
-tokenizer.save_pretrained(MODEL)
+    # Load pre-trained BERT model and tokenizer
+    MODEL = 'bert-base-uncased'
 
-# Encode keyword and text tokens using BERT
-encoded_keywords = tokenizer(keywords.lower(), return_tensors='pt')['input_ids']
-# encoded_texts = tokenizer(list(df['clean_text']), padding=True, truncation=True, return_tensors='pt')['input_ids']
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    tokenizer = AutoTokenizer.from_pretrained(MODEL)
+    model = AutoModel.from_pretrained(MODEL).to(device)
+    model.save_pretrained(MODEL)
+    tokenizer.save_pretrained(MODEL)
 
-filename_list = ['2005','2004','2003','2002','2001','2000']
-# filename_list = ['2005']
-df_lst = []
+    # Encode keyword and text tokens using BERT
+    encoded_keywords = tokenizer(keywords.lower(), return_tensors='pt')['input_ids']
+    # encoded_texts = tokenizer(list(df['clean_text']), padding=True, truncation=True, return_tensors='pt')['input_ids']
 
-# Generate BERT embeddings for keyword and text tokens batch-wise and compute cosine similarity
-with torch.no_grad():
-    keyword_embeddings = model(encoded_keywords.to(device))[0][:, 0, :].cpu().numpy()
-for filename in filename_list:
-    # Load DataFrame
-    df = pd.read_pickle('book-pickle/'+ filename +'.pkl')
-    # print(df['embeddings'].head(10))
-    # break
-    batch_size = 64
-    total_batches = (len(df) + batch_size - 1) // batch_size
+    filename_list = ['2005','2004','2003','2002','2001','2000']
+    # filename_list = ['2005']
+    df_lst = []
 
-    df['similarity_score'] = ''
+    # Generate BERT embeddings for keyword and text tokens batch-wise and compute cosine similarity
+    with torch.no_grad():
+        keyword_embeddings = model(encoded_keywords.to(device))[0][:, 0, :].cpu().numpy()
+    for filename in filename_list:
+        # Load DataFrame
+        df = pd.read_pickle('book-pickle/'+ filename +'.pkl')
+        # print(df['embeddings'].head(10))
+        # break
+        batch_size = 64
+        total_batches = (len(df) + batch_size - 1) // batch_size
+
+        df['similarity_score'] = ''
 
 
-    for i in tqdm(range(total_batches)):
-        # Get batch start and end indices
-        start_idx = i * batch_size
-        end_idx = min(start_idx + batch_size, len(df))
+        for i in tqdm(range(total_batches)):
+            # Get batch start and end indices
+            start_idx = i * batch_size
+            end_idx = min(start_idx + batch_size, len(df))
 
-        text_embeddings = list(df.iloc[start_idx:end_idx]['embeddings'])
-        # Compute cosine similarity between keyword vector and text vectors in the batch
-        similarity_scores = cosine_similarity(keyword_embeddings, text_embeddings)
-        
-        # Add similarity scores to DataFrame
-        df.iloc[start_idx:end_idx, df.columns.get_loc('similarity_score')] = similarity_scores[0]
-    df_lst.append(df)
+            text_embeddings = list(df.iloc[start_idx:end_idx]['embeddings'])
+            # Compute cosine similarity between keyword vector and text vectors in the batch
+            similarity_scores = cosine_similarity(keyword_embeddings, text_embeddings)
+            
+            # Add similarity scores to DataFrame
+            df.iloc[start_idx:end_idx, df.columns.get_loc('similarity_score')] = similarity_scores[0]
+        df_lst.append(df)
 
-big_df = pd.concat(df_lst)
-# Sort DataFrame by similarity score in descending order and show top 10 rows
-top_10 = big_df.sort_values(by='similarity_score', ascending=False).head(10)
-print(top_10)
+    big_df = pd.concat(df_lst)
+    # Sort DataFrame by similarity score in descending order and show top 10 rows
+    top_10 = big_df.sort_values(by='similarity_score', ascending=False).head(10)
+    print(top_10)
+    return(top_10)
+
+def gradio_gui():
+    outputs = [gr.Dataframe(row_count = (11, "dynamic"), col_count=(5, "dynamic"), label="Generated List")]
+    gr.Interface(fn = generate_top_ten, inputs = "textbox", outputs = outputs).launch()
+
+if __name__ == "__main__":
+    generate_top_ten()
