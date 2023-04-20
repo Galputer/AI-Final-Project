@@ -131,6 +131,7 @@ dmypy.json
 *.csv
 *.zip
 *.tsv
+*.pkl
 
 cardiffnlp/
 bert-base-uncased/
