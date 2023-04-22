@@ -2,11 +2,10 @@ from transformers import AutoTokenizer, AutoModel
 import torch
 from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
-import numpy as np
 from tqdm import tqdm
 import gradio as gr
 
-def generate_top_ten(keywords = 'fantasy novel short'):
+def generate_top_ten(keywords = 'fantasy novel short', progress=gr.Progress()):
 
     # Load pre-trained BERT model and tokenizer
     MODEL = 'bert-base-uncased'
@@ -21,8 +20,8 @@ def generate_top_ten(keywords = 'fantasy novel short'):
     encoded_keywords = tokenizer(keywords.lower(), return_tensors='pt')['input_ids']
     # encoded_texts = tokenizer(list(df['clean_text']), padding=True, truncation=True, return_tensors='pt')['input_ids']
 
-    filename_list = ['2005','2004','2003','2002','2001','2000']
-    # filename_list = ['2005']
+    # filename_list = ['2005','2004','2003','2002','2001','2000']
+    filename_list = ['2005']
     df_lst = []
 
     # Generate BERT embeddings for keyword and text tokens batch-wise and compute cosine similarity
@@ -39,7 +38,7 @@ def generate_top_ten(keywords = 'fantasy novel short'):
         df['similarity_score'] = ''
 
 
-        for i in tqdm(range(total_batches)):
+        for i in progress.tqdm(range(total_batches)):
             # Get batch start and end indices
             start_idx = i * batch_size
             end_idx = min(start_idx + batch_size, len(df))
@@ -58,16 +57,7 @@ def generate_top_ten(keywords = 'fantasy novel short'):
     print(top_10)
     return(top_10[['product_title','clean_text']])
 
-def gradio_gui():
-    
-    with gr.Blocks() as demo:
-        keywords = gr.Textbox(label="Keywords")
-        greet_btn = gr.Button("generate")
-        outputs = gr.Dataframe(row_count = (10, "dynamic"), col_count=(2, "dynamic"), label="Generated List")
-        
-        greet_btn.click(fn = generate_top_ten, inputs = keywords, outputs = outputs)
-    demo.launch(share=True)
 
 
 if __name__ == "__main__":
-    gradio_gui()
+    generate_top_ten()
