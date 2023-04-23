@@ -1,10 +1,19 @@
 from transformers import AutoTokenizer, AutoModel
 import torch
-from sklearn.metrics.pairwise import cosine_similarity
 import pandas as pd
 from tqdm import tqdm
+import numpy as np
+def overlap_coefficient(keyword_list, text_list):
+    set1 = set(keyword_list[0])
+    set2 = np.apply_along_axis(lambda x: set(x), 1, text_list)
 
-def generate_top_ten(keywords = 'fantasy novel short', semantic = 'both', filename_list = ['2005','2004','2003','2002','2001','2000']):
+    intersection = np.frompyfunc(lambda x: len(set1.intersection(x)), 1, 1)
+    overlap_coefficients = intersection(set2) / keyword_list[0].size
+
+    return overlap_coefficients
+
+
+def generate_top_ten(keywords = 'fantasy novel short space travel', semantic = 'both', filename_list = ['2005','2004','2003','2002','2001','2000']):
 
     # Load pre-trained BERT model and tokenizer
     MODEL = 'bert-base-uncased'
@@ -37,7 +46,7 @@ def generate_top_ten(keywords = 'fantasy novel short', semantic = 'both', filena
         batch_size = 64
         total_batches = (len(df) + batch_size - 1) // batch_size
 
-        df['similarity_score'] = ''
+        df['overlap_coefficient'] = ''
 
 
         for i in tqdm(range(total_batches)):
@@ -47,10 +56,10 @@ def generate_top_ten(keywords = 'fantasy novel short', semantic = 'both', filena
 
             text_embeddings = list(df.iloc[start_idx:end_idx]['embeddings'])
             # Compute cosine similarity between keyword vector and text vectors in the batch
-            similarity_scores = cosine_similarity(keyword_embeddings, text_embeddings)
+            similarity_scores = overlap_coefficient(keyword_embeddings, text_embeddings)
             
             # Add similarity scores to DataFrame
-            df.iloc[start_idx:end_idx, df.columns.get_loc('similarity_score')] = similarity_scores[0]
+            df.iloc[start_idx:end_idx, df.columns.get_loc('overlap_coefficient')] = similarity_scores
         df_lst.append(df)
 
     big_df = pd.concat(df_lst)
@@ -62,9 +71,9 @@ def generate_top_ten(keywords = 'fantasy novel short', semantic = 'both', filena
         big_df = big_df[big_df['sentiment-score'] > 0.3]
     
     # Sort DataFrame by similarity score in descending order and show top 10 rows
-    top_10 = big_df.sort_values(by='similarity_score', ascending=False)
+    top_10 = big_df.sort_values(by='overlap_coefficient', ascending=False)
     top_10 = top_10.head(10)
-    print(top_10)
+    print(top_10[['product_title','clean_text','overlap_coefficient']])
     return(top_10[['product_title','clean_text']])
 
 
