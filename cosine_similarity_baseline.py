@@ -5,7 +5,7 @@ import pandas as pd
 from tqdm import tqdm
 import gradio as gr
 
-def generate_top_ten(keywords = 'fantasy novel short', progress=gr.Progress()):
+def generate_top_ten(keywords = 'fantasy novel short', semantic = 'both', filename_list = ['2005','2004','2003','2002','2001','2000']):
 
     # Load pre-trained BERT model and tokenizer
     MODEL = 'bert-base-uncased'
@@ -21,7 +21,7 @@ def generate_top_ten(keywords = 'fantasy novel short', progress=gr.Progress()):
     # encoded_texts = tokenizer(list(df['clean_text']), padding=True, truncation=True, return_tensors='pt')['input_ids']
 
     # filename_list = ['2005','2004','2003','2002','2001','2000']
-    filename_list = ['2005']
+    # filename_list = ['2005']
     df_lst = []
 
     # Generate BERT embeddings for keyword and text tokens batch-wise and compute cosine similarity
@@ -29,7 +29,10 @@ def generate_top_ten(keywords = 'fantasy novel short', progress=gr.Progress()):
         keyword_embeddings = model(encoded_keywords.to(device))[0][:, 0, :].cpu().numpy()
     for filename in filename_list:
         # Load DataFrame
-        df = pd.read_pickle('book-pickle/'+ filename +'.pkl')
+        try:
+            df = pd.read_pickle('book-pickle/'+ filename +'.pkl')
+        except(FileNotFoundError):
+            continue
         # print(df['embeddings'].head(10))
         # break
         batch_size = 64
@@ -38,7 +41,7 @@ def generate_top_ten(keywords = 'fantasy novel short', progress=gr.Progress()):
         df['similarity_score'] = ''
 
 
-        for i in progress.tqdm(range(total_batches)):
+        for i in tqdm(range(total_batches)):
             # Get batch start and end indices
             start_idx = i * batch_size
             end_idx = min(start_idx + batch_size, len(df))
@@ -52,8 +55,16 @@ def generate_top_ten(keywords = 'fantasy novel short', progress=gr.Progress()):
         df_lst.append(df)
 
     big_df = pd.concat(df_lst)
+    
+    # filter semantic flag
+    if semantic == 'neg':
+        big_df = big_df[big_df['sentiment-score'] < -0.3]
+    elif semantic == 'pos':
+        big_df = big_df[big_df['sentiment-score'] > 0.3]
+    
     # Sort DataFrame by similarity score in descending order and show top 10 rows
-    top_10 = big_df.sort_values(by='similarity_score', ascending=False).head(10)
+    top_10 = big_df.sort_values(by='similarity_score', ascending=False)
+    top_10 = top_10.head(10)
     print(top_10)
     return(top_10[['product_title','clean_text']])
 
