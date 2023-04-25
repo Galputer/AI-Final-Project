@@ -136,3 +136,4 @@ dmypy.json
 
 cardiffnlp/
 bert-base-uncased/
+/sentence-transformers
