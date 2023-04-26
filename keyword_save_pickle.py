@@ -14,7 +14,7 @@ model = AutoModel.from_pretrained(MODEL).to(device)
 model.save_pretrained(MODEL)
 tokenizer.save_pretrained(MODEL)
 
-filename_list = ['2005','2004','2003','2002','2001','2000']
+filename_list = ['2002','2001','2000']
 
 for filename in filename_list:
     # Load DataFrame
