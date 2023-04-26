@@ -1,4 +1,5 @@
-from general_cosine_sim_base import generate_top_ten
+# from general_cosine_sim_base import generate_top_ten
+from E_cosine_sim_base import generate_top_ten
 import gradio as gr
 
 
