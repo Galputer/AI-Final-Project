@@ -66,4 +66,4 @@ def generate_top_ten_v2(keywords = 'fantasy novel short', semantic = 'pos', file
 
 
 if __name__ == "__main__":
-    generate_top_ten()
+    generate_top_ten_v2()
