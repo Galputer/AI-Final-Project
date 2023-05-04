@@ -14,7 +14,7 @@ def gradio_gui():
         err_msg = gr.Textbox(label="Error message")
         with gr.Tab("Keyword Curated List"):
             generate_btn = gr.Button("generate")
-            generate_btn.click(fn = generate_top_ten_v4, inputs = [keywords,semantics,years], outputs = outputs)
+            generate_btn.click(fn = generate_top_ten_v4, inputs = [keywords,semantics,years], outputs = [outputs,err_msg])
         
         with gr.Tab("Keyword Curated List with prices (slow)"):
             generate_btn = gr.Button("generate")
@@ -22,15 +22,15 @@ def gradio_gui():
             
         with gr.Tab("Baseline Curated List"):
             generate_btn = gr.Button("generate")
-            generate_btn.click(fn = generate_top_ten_v3, inputs = [keywords,semantics,years], outputs = outputs)
+            generate_btn.click(fn = generate_top_ten_v3, inputs = [keywords,semantics,years], outputs = [outputs,err_msg])
         
         with gr.Tab("Keyword Cosine Similarity"):
             generate_btn = gr.Button("generate")
-            generate_btn.click(fn = generate_top_ten_v2, inputs = [keywords,semantics,years], outputs = outputs)
+            generate_btn.click(fn = generate_top_ten_v2, inputs = [keywords,semantics,years], outputs = [outputs,err_msg])
         
         with gr.Tab("Baseline Cosine Similarity"):
             generate_btn = gr.Button("generate")
-            generate_btn.click(fn = generate_top_ten, inputs = [keywords,semantics,years], outputs = outputs)
+            generate_btn.click(fn = generate_top_ten, inputs = [keywords,semantics,years], outputs = [outputs,err_msg])
 
     demo.queue()
     demo.launch(share=True)

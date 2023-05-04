@@ -151,7 +151,7 @@ def generate_top_ten_v3(keywords = 'math science book text', semantic = 'pos', f
     print(top_10)
 
     top_10.to_csv('top10_output.csv')
-    return(top_10[['product_title','rec-score']])
+    return top_10[['product_title','rec-score']],"None"
 
 def generate_top_ten_v4(keywords = 'math science book text', semantic = 'pos', filename_list = ['2005']):
 
@@ -252,7 +252,7 @@ def generate_top_ten_v4(keywords = 'math science book text', semantic = 'pos', f
     print(top_10)
 
     top_10.to_csv('top10_output.csv')
-    return(top_10[['product_title','rec-score']])
+    return top_10[['product_title','rec-score']],"None"
 
 def generate_top_ten_with_prices(keywords = 'math science book text', semantic = 'pos', filename_list = ['2005']):
     # Load pre-trained BERT model and tokenizer
@@ -361,7 +361,8 @@ def generate_top_ten_with_prices(keywords = 'math science book text', semantic =
         print(top_10)
         return top_10[['product_title','rec-score']],"Error in fetching product prices, showing result without price information"
     print(top_10)
-    return top_10[['product_title','rec-score','price']],""
+    top_10.to_csv('top10_output.csv')
+    return top_10[['product_title','rec-score','price']],"None"
 
 if __name__ == "__main__":
     generate_top_ten_with_prices()

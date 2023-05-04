@@ -65,7 +65,7 @@ def generate_top_ten(keywords = 'fantasy novel short', semantic = 'both', filena
     top_10 = big_df.sort_values(by='similarity_score', ascending=False)
     top_10 = top_10.head(10)
     print(top_10)
-    return(top_10[['product_title','clean_text']])
+    return top_10[['product_title','clean_text']],"None"
 
 
 
